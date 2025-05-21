@@ -123,4 +123,4 @@ if [ $7 -eq 1 ]; then
 fi
 
 secs_to_human "$SECONDS"
-echo "Command: bash dataset_creation.sh $1 $2 $3 $4 $5 $6 $7 $8 $9"
+echo "Command: bash dataset_creation.sh $1 $2 $3 $4 $5 $6 $7 $8"
