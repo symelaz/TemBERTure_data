@@ -1,8 +1,7 @@
 
 ---
 
-# 🧬 TemBERTure: 
-## Protein Thermostability Dataset Creation Pipeline
+# 🧬 TemBERTure: Protein Thermostability Dataset Creation Pipeline
 
 This repository contains a **reproducible pipeline** to generate machine learning-ready datasets for classifying and studying **thermophilic vs. mesophilic proteins**. The core script, `main.sh`, handles **balancing**, **fragmentation**, **clustering**, and **intelligent splitting** of input sequences.
 
