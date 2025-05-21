@@ -139,6 +139,7 @@ if [ $ans = 'yes' ]; then
 	done
 fi
 
+rm Alignment_Results log
 
 secs_to_human "$SECONDS"
 echo "Command: bash dataset_creation.sh $1 $2 $3 $4 $5 $6 $7 $8"
