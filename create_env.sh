@@ -17,6 +17,7 @@ MMSEQS_DIR="$3"
 
 # Create and activate conda environment
 conda create -n "$ENV_NAME" python=3.13 -y
+source $(conda info --base)/etc/profile.d/conda.sh
 conda activate "$ENV_NAME"
 # Install Python packages
 conda install conda-forge::biopython
