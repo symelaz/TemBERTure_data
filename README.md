@@ -22,5 +22,20 @@ This repository contains a **reproducible pipeline** to generate machine learnin
 
 Just run 
 ```bash
-bash create_env.sh conda_environment_name install_dir_mmseqs install_dir_hmmer
+bash create_env.sh conda_environment_name /path/to/install/mmseqs /path/to/install/hmmer /path/to/install/Pfam/database
+```
+
+### 🔧 How to use
+Just run
+```bash
+bash main.sh \
+               THERMO.fasta \ # Fasta file of the thermophilic sequences
+               MESO.fasta\ # Fasta file of the mesophilic sequences
+               /path/to/install/mmseqs/bin \ 
+               /path/to/install/hmmer/src \
+               /path/to/install/Pfam/database \
+               n_jobs \ # Number of cpus available
+               splitting_type \  # 1 --> random fragments, 2 --> domains, 3 --> domains from sequences containing exclusively one domain
+               splitting_ratio \ # ratio for splitting (e.g. splitting_ratio=0.8 --> 0.8 [training], 0.1 [validation], 0.1 [test] 
+               number_of_clusters \ # Number of the biggest clusters to automatically be moved to the training set. 
 ```
