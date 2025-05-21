@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 ############################ Inputs ############################
 # $1 --> Sequences of the THERMOPHILIC proteins in fasta format
@@ -75,54 +75,70 @@ fi
 
 # Start the splitting of the datasets into training and test and validation sets
 # 1. Merge the fragmented and the full sequence datasets
-# 2. Cluster them seperately for meso and thermo 
+# 2. Cluster them seperately for meso and thermo
 # 3. Split with 80 10 10 ratio
-# 4. Seperate fragments from full sequences 
-# 5. Concatenate thermo and meso 
+# 4. Seperate fragments from full sequences
+# 5. Concatenate thermo and meso
 
 if [ -d "SPLIT" ]; then
-	echo "SPLIT exists."
-    	read -p "Do you want to run the splitting into training validation and test sets again? Write yes or no: " ans
+        echo "SPLIT exists."
+        read -p "Do you want to run the splitting into training validation and test sets again? Write yes or no: " ans
 else
-    	ans='yes'
+        ans='yes'
 fi
 
 if [ $ans = 'yes' ]; then
-	mkdir -p SPLIT
+        mkdir -p SPLIT
+        cat CLASSIFIER_dataset $file_name_fr| awk -F, 'length($2) > 20 { print }'| awk -F, '!seen[$2]++' > SPLIT/CLASSIFIER_dataset_merged
 
-  	# Concatenate two datasets, filter lines where the second field is > 20 characters, and remove duplicates based on the second field.
-    	cat CLASSIFIER_dataset $file_name_fr| awk -F, 'length($2) > 20 { print }'| awk -F, '!seen[$2]++' > SPLIT/CLASSIFIER_dataset_merged
-    
-    	# Run Splitting Code 
-    	bash utils/splitting.sh SPLIT/CLASSIFIER_dataset_merged $8 $3 SPLIT
-            
-    	for sets in "TEST" "TRAIN" "VAL"
-    	do
-		for types in "full_sequences" "fragments"
-		do
-			mkdir -p FINAL_DATASETS/$types/non_redundant
-			mkdir -p FINAL_DATASETS/$types/redundant
+	for TYPE in "THERMO" "MESO"
+	do
+		echo "Working with the $TYPE dataset"
+		splitted_cluster="FRAGMENTATION/CLUSTER/$TYPE"
+		mkdir -p $splitted_cluster
 
-			cat SPLIT/MESO_$sets"_"$types"_non_redundant" SPLIT/THERMO_$sets"_"$types"_non_redundant" > FINAL_DATASETS/$types/non_redundant/$sets"_"$types"_non_redundant"
-			wc -l FINAL_DATASETS/$types/non_redundant/$sets"_"$types"_non_redundant"
+		if [ $TYPE = 'THERMO' ]; then
+			prefix="$splitted_cluster/THERMO"
+			grep ",1" $file_name_fr |awk -F, '{printf">%s\n%s\n", $1,$2}' > $prefix.fasta
+			MODE=1
+		else
+			prefix="$splitted_cluster/MESO"
+			grep ",0" $file_name_fr |awk -F, '{printf">%s\n%s\n", $1,$2}' > $prefix.fasta
+			MODE=0
+		fi
+		echo "Clustering the $TYPE dataset"
+		$3/mmseqs easy-cluster $prefix.fasta $prefix tmp --cluster-reassign > $prefix.log
+		echo "Splitting the $TYPE dataset"
+		python utils/graph_based_splitting.py \
+			--thermo_domains ${prefix}_cluster.tsv \
+        		--thermo_sequences BALANCING/${TYPE}_CASCADED_CLUSTER/${TYPE}_cluster.tsv \
+        		--classifier_dataset SPLIT/CLASSIFIER_dataset_merged \
+			--output SPLIT/$TYPE/ \
+			--ratio $8 \
+			--threshold 7 \
+			--mode $MODE 
 
-			cat SPLIT/MESO_$sets"_"$types"_redundant" SPLIT/THERMO_$sets"_"$types"_redundant" > FINAL_DATASETS/$types/redundant/$sets"_"$types"_redundant"
-			wc -l FINAL_DATASETS/$types/redundant/$sets"_"$types"_redundant"
+	done
+	
+	# Merging the final datasets and running a sanity check
+	for TYPE in "redundant" "non_redundant"
+        do
+                for seqs_type in "domains" "sequences"
+                do
+                        output_dir=FINAL_DATASET/${TYPE}_${seqs_type}
+                        mkdir -p $output_dir
+
+                        for split in "training" "test" "val"
+                        do
+                                cat SPLIT/*/$TYPE/${TYPE}_${split}_${seqs_type}_data > $output_dir/${split}.csv
+                        done
+
+			echo "Run sanity check for the $output_dir dataset"
+			bash utils/splits_sanity_check.sh $output_dir/training.csv $output_dir/test.csv $output_dir/val.csv $output_dir/SANITY_CHECK $3
 		done
-
-		
-        done     
+	done
 fi
 
-wc -l SPLIT/* |grep "redundant" > tmp/sizes
-sed -i 's/SPLIT\///g' tmp/sizes
-python utils/report_dataset_sizes.py --input tmp/sizes --output FINAL_DATASETS/report.xlsx
-
-if [ $7 -eq 1 ]; then
-	echo "Don't forget to run the processing of the logs file by using the command"
-	echo "bash utils/processing_logs_file.sh logs_file FRAGMENTATION/FRAGMENTS"
-    	echo ""
-fi
 
 secs_to_human "$SECONDS"
 echo "Command: bash dataset_creation.sh $1 $2 $3 $4 $5 $6 $7 $8"
