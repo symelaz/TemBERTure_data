@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 ############################ Inputs ############################
 # $1 --> Sequences of the THERMOPHILIC proteins in fasta format
