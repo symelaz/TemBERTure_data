@@ -89,7 +89,9 @@ fi
 
 if [ $ans = 'yes' ]; then
 	mkdir -p SPLIT
-    	#cat CLASSIFIER_dataset $file_name_fr| awk -F, 'length($2) > 20 { print }'| awk -F, '!seen[$2]++' > SPLIT/CLASSIFIER_dataset_merged
+
+  	# Concatenate two datasets, filter lines where the second field is > 20 characters, and remove duplicates based on the second field.
+    	cat CLASSIFIER_dataset $file_name_fr| awk -F, 'length($2) > 20 { print }'| awk -F, '!seen[$2]++' > SPLIT/CLASSIFIER_dataset_merged
     
     	# Run Splitting Code 
     	bash utils/splitting.sh SPLIT/CLASSIFIER_dataset_merged $8 $3 SPLIT
