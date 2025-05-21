@@ -22,7 +22,7 @@ This repository contains a **reproducible pipeline** to generate machine learnin
 
 Just run 
 ```bash
-bash create_env.sh conda_environment_name /path/to/install/mmseqs /path/to/install/hmmer /path/to/install/Pfam/database
+bash create_env.sh conda_environment_name /path/to/install/mmseqs /path/to/install/hmmer /path/to/install/Pfam/database /path/to/install/Pfam/database
 ```
 
 ### 🔧 How to use
