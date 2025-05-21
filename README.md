@@ -1,5 +1,3 @@
-Here's your improved and extended `README.md`, rewritten for clarity and completeness, including a section about the related publication:
-
 ---
 
 # 🧬 TemBERTure: Protein Thermostability Dataset Creation Pipeline
@@ -113,5 +111,3 @@ Contributions, issues, and suggestions are welcome. Please open an issue or subm
 This project is licensed under the MIT License – see the [LICENSE](LICENSE) file for details.
 
 ---
-
-Let me know if you'd like me to auto-generate this into a Markdown file (`README.md`) and help you link it with your GitHub repo.
