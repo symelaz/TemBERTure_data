@@ -2,8 +2,9 @@
 
 ################ Inputs ################
 # 1 --> Name of the conda environment to create
-# 2 --> Name of the path to install hmmer
-# 3 --> Name of the path to install mmseqs
+# 2 --> Path to install hmmer
+# 3 --> Path to install mmseqs
+# 4 --> Path to install the Pfam database
 
 # Check inputs
 if [ "$#" -ne 3 ]; then
@@ -14,6 +15,7 @@ fi
 ENV_NAME="$1"
 HMMER_DIR="$2"
 MMSEQS_DIR="$3"
+PFAM_DIR="$4"
 
 # Create and activate conda environment
 conda create -n "$ENV_NAME" python=3.13 -y
@@ -38,3 +40,7 @@ cd hmmer-3.3.2
 make -j$(nproc)
 make check
 make install
+
+# Download the Pfam database
+wget https://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.hmm.gz -O $PFAM_DIR/Pfam-A.hmm.gz
+gunzip $PFAM_DIR/Pfam-A.hmm.gz
