@@ -18,14 +18,20 @@ parser.add_argument("--classifier_dataset",help="Classifier Dataset",type=str)
 parser.add_argument("--output",help="Define ouput directory",type=str)
 parser.add_argument("--ratio",help="The splitting ratio (0,1)",type=float,default=0.7)
 parser.add_argument("--threshold",help="Minimum cluster size that will directly go to training set", type=int,default=7)
-parser.add_argument("--tyoe",help="0: for Meso and 1: for Thermo")
+parser.add_argument("--mode",help="0: for Meso and 1: for Thermo")
 args = parser.parse_args()
 
-thermo_seq = pd.read_csv(args.thermo_sequences)
-thermo_domains = pd.read_csv(args.thermo_domains)
+thermo_seq = pd.read_csv(args.thermo_sequences, sep="\t", names=["CentroidID", "SeqID"])
+thermo_domains = pd.read_csv(args.thermo_domains, sep="\t", names=["DomainCentroidID", "DomainID"])
 
-Path(args.output + "/Redundant").mkdir(parents=True, exist_ok=True)
-Path(args.output + "/Non_redundant").mkdir(parents=True, exist_ok=True)
+dataset = pd.read_csv(args.classifier_dataset,header=None)
+dataset_seq = dict(zip(dataset[0],dataset[1]))
+
+thermo_seq = thermo_seq[ (thermo_seq.CentroidID.isin(dataset[0])) & (thermo_seq.SeqID.isin(dataset[0])) ]
+thermo_domains = thermo_domains[ (thermo_domains.DomainCentroidID.isin(dataset[0])) & (thermo_domains.DomainID.isin(dataset[0])) ]
+
+Path(args.output + "/redundant").mkdir(parents=True, exist_ok=True)
+Path(args.output + "/non_redundant").mkdir(parents=True, exist_ok=True)
 
 def extract_singleton(df):
     v = df.CentroidID.value_counts()
@@ -49,8 +55,8 @@ def add_domain_graph(df_domain, G):
     attrs = {}
     for i,s in tqdm(df_domain.iterrows(), total=len(df_domain)):
         node = s['DomainID'] # unique domain id --> seqid__domain__start__end
-        seq = s['SeqID']
-        centroid = s['CentroidID']
+        seq = s['DomainID'].split("__")[0]
+        centroid = s['DomainCentroidID'].split("__")[0]
         domain_centroid = s['DomainCentroidID']
         attrs[node] = {'centroid_dom': centroid == seq, 'domain': True, 'centroid_domain': node == domain_centroid}
         H.add_edge(node, centroid)
@@ -154,7 +160,6 @@ for cl in info:
     else:
         rest.append(cl)
 
-print("\tStep 3: Randomly distribute the rest of the clusters in the Test, Training and Validation sets")
 test = []
 validation = []
 test, rest = split_list(rest, test_size)
@@ -162,19 +167,19 @@ val, rest = split_list(rest, test_size)
 training = training + rest
 
 # Creation of Redundant Dataset
-redundant_data(training, os.path.join(args.output,"Redundant/ids-Redundunt_training"))
-redundant_data(test, os.path.join(args.output,"Redundant/ids-Redundunt_test"))
-redundant_data(val, os.path.join(args.output,"Redundant/ids-Redundunt_val"))
+redundant_data(training, os.path.join(args.output,"redundant/ids-redundant_training"))
+redundant_data(test, os.path.join(args.output,"redundant/ids-redundant_test"))
+redundant_data(val, os.path.join(args.output,"redundant/ids-redundant_val"))
 
 # Creation of Non Redundant Dataset
-non_redundant_data(training, os.path.join(args.output,"Non_redundant/ids-non_redundunt_training"))
-non_redundant_data(test, os.path.join(args.output,"Non_redundant/ids-non_redundunt_test"))
-non_redundant_data(val, os.path.join(args.output,"Non_redundant/ids-non_redundunt_val"))
+non_redundant_data(training, os.path.join(args.output,"non_redundant/ids-non_redundant_training"))
+non_redundant_data(test, os.path.join(args.output,"non_redundant/ids-non_redundant_test"))
+non_redundant_data(val, os.path.join(args.output,"non_redundant/ids-non_redundant_val"))
 
 dataset = pd.read_csv(args.classifier_dataset,header=None)
 dataset_seq = dict(zip(dataset[0],dataset[1]))
 
-for mypath in ["Non_redundant", "Redundant"]:
+for mypath in ["non_redundant", "redundant"]:
     mypath = os.path.join(args.output,mypath)
     filenames = next(os.walk(mypath), (None, None, []))[2]
     for file in filenames:
@@ -189,11 +194,11 @@ for mypath in ["Non_redundant", "Redundant"]:
 
 print("\n\nFinal Datasets for the Thermophilic Proteins:\n")
 print("\nNon Redundant Domains Dataset:")
-os.system(f"wc -l {args.output}/Non_redundant/*_domains_data")
+os.system(f"wc -l {args.output}/non_redundant/*_domains_data")
 print("\nNon Redundat Sequences Dataset:")
-os.system(f"wc -l {args.output}/Non_redundant/*_sequences_data")
+os.system(f"wc -l {args.output}/non_redundant/*_sequences_data")
 
 print("\nRedundant Domains Dataset:")
-os.system(f"wc -l {args.output}/Redundant/*_domains_data")
+os.system(f"wc -l {args.output}/redundant/*_domains_data")
 print("\nRedundatn Sequences Dataset:")
-os.system(f"wc -l {args.output}/Redundant/*_sequences_data")
+os.system(f"wc -l {args.output}/redundant/*_sequences_data")
