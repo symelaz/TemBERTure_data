@@ -35,7 +35,11 @@ The pipeline is especially suited for training **transformer-based models** or o
 You can create and configure the necessary environment with:
 
 ```bash
-bash create_env.sh conda_environment_name /path/to/install/mmseqs /path/to/install/hmmer /path/to/install/Pfam/Database
+bash create_env.sh
+    conda_environment_name \
+    /path/to/install/mmseqs \
+    /path/to/install/hmmer \
+    /path/to/install/Pfam/Database
 ```
 
 ---
